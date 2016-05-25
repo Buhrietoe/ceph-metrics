@@ -13,6 +13,6 @@
   password = "{{ .Env.TELEGRAF_PASSWORD }}"
 
 [[inputs.exec]]
-  commands = ["ceph -s -f json-pretty"]
-  data_format = "json"
+  commands = ["/opt/ceph-metrics.py"]
+  data_format = "influx"
   name_suffix = "_ceph"

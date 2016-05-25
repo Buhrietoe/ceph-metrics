@@ -3,7 +3,7 @@ FROM centos:centos7
 ENV TELEGRAF_VERSION 0.13.0
 COPY ceph.repo /etc/yum.repos.d/ceph.repo
 RUN yum install -y epel-release wget && \
-    yum install -y python python-pip python-virtualenv ceph && \
+    yum install -y python ceph && \
     yum install -y https://dl.influxdata.com/telegraf/releases/telegraf-${TELEGRAF_VERSION}.x86_64.rpm && \
     yum clean all -y
 
@@ -20,4 +20,7 @@ ENV TELEGRAF_INTERVAL_FLUSH 25s
 ENV TELEGRAF_INTERVAL_JITTER 5s
 
 COPY telegraf.tmpl /etc/telegraf/
+COPY ceph-metrics.py /opt/
+RUN chmod +x /opt/ceph-metrics.py
+
 CMD dockerize -template /etc/telegraf/telegraf.tmpl:/etc/telegraf/telegraf.conf telegraf
