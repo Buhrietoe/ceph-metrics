@@ -1,0 +1,18 @@
+[agent]
+  interval = "{{ .Env.TELEGRAF_INTERVAL }}"
+  flush_interval = "{{ .Env.TELEGRAF_INTERVAL_FLUSH }}"
+  flush_jitter = "{{ .Env.TELEGRAF_INTERVAL_JITTER }}"
+  debug = false
+  quiet = true
+  omit_hostname = true
+
+[[outputs.influxdb]]
+  urls = ["http://{{ .Env.INFLUXDB_HOST }}:8086"]
+  database = "{{ .Env.TELEGRAF_DB }}"
+  username = "{{ .Env.TELEGRAF_USER }}"
+  password = "{{ .Env.TELEGRAF_PASSWORD }}"
+
+[[inputs.exec]]
+  commands = ["ceph -s -f json-pretty"]
+  data_format = "json"
+  name_suffix = "_ceph"
