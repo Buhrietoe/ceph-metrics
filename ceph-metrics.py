@@ -16,7 +16,7 @@ def ceph_command(cluster, cmd):
     """
 
     return_code, results, error = cluster.mon_command(
-        json.dumps(dict(format='json', prefix=cmd)), '', timeout=5
+        json.dumps(dict(format='json', prefix=cmd)), '', timeout=30
     )
 
     if return_code != 0:
