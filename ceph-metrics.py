@@ -6,7 +6,6 @@ import os
 from rados import Rados
 from rados import Error as RadosError
 import timeout_decorator
-from timeout_decorator import TimeoutError
 
 
 CEPH_CLUSTER_CONFIGS = os.getenv('CEPH_CLUSTER_CONFIGS', '/etc/ceph/clusters/')
@@ -57,8 +56,8 @@ def get_each_cluster_status(clusters):
         cluster_status = {}
         try:
             cluster_status = get_cluster_status(cluster)
-        except TimeoutError:
-            cluster_status['health'] = dict(overall_status='TIMEOUT')
+        except:
+            cluster_status['health'] = dict(overall_status='FAILED')
 
         measurements.append(status_to_measurement(cluster_status, cluster_name))
 
@@ -80,7 +79,7 @@ def status_to_measurement(status, cluster_name):
 
     values.append('health='+health)
 
-    if status['health']['overall_status'] != 'TIMEOUT':
+    if status['health']['overall_status'] != 'FAILED':
         values.append('num_osds='+str(status['osdmap']['osdmap']['num_osds']))
         values.append('num_up_osds='+str(status['osdmap']['osdmap']['num_up_osds']))
         values.append('num_in_osds='+str(status['osdmap']['osdmap']['num_in_osds']))
