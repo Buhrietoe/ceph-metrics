@@ -54,12 +54,13 @@ def get_each_cluster_status(clusters):
 
     measurements = []
     for cluster_name, cluster in clusters.iteritems():
-        status_measurement = {}
+        cluster_status = {}
         try:
-            status_measurement = status_to_measurement(get_cluster_status(cluster), cluster_name)
+            cluster_status = get_cluster_status(cluster)
         except TimeoutError:
-            status_measurement['health'] = dict(overall_status='TIMEOUT')
-        measurements.append(status_measurement)
+            cluster_status['health'] = dict(overall_status='TIMEOUT')
+
+        measurements.append(status_to_measurement(cluster_status, cluster_name))
 
     return measurements
 
