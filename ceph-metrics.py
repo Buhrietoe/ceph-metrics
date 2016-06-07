@@ -6,6 +6,7 @@ import os
 from rados import Rados
 from rados import Error as RadosError
 import timeout_decorator
+from timeout_decorator import TimeoutError
 
 
 CEPH_CLUSTER_CONFIGS = os.getenv('CEPH_CLUSTER_CONFIGS', '/etc/ceph/clusters/')
