@@ -5,10 +5,11 @@ import json
 import os
 from rados import Rados
 from rados import Error as RadosError
+import timeout_decorator
 
 
 CEPH_CLUSTER_CONFIGS = os.getenv('CEPH_CLUSTER_CONFIGS', '/etc/ceph/clusters/')
-
+CLUSTER_COMMAND_TIMEOUT = int(os.getenv('CLUSTER_COMMAND_TIMEOUT', '15'))
 
 def ceph_command(cluster, cmd):
     """
@@ -41,7 +42,7 @@ def get_ceph_clusters():
 
     return ceph_clusters
 
-
+@timeout_decorator.timeout(CLUSTER_COMMAND_TIMEOUT)
 def get_cluster_status(cluster_config):
 
     with Rados(**cluster_config) as cluster:
@@ -52,7 +53,11 @@ def get_each_cluster_status(clusters):
 
     measurements = []
     for cluster_name, cluster in clusters.iteritems():
-        status_measurement = status_to_measurement(get_cluster_status(cluster), cluster_name)
+        status_measurement = {}
+        try:
+            status_measurement = status_to_measurement(get_cluster_status(cluster), cluster_name)
+        except TimeoutError:
+            status_measurement['health'] = dict(overall_status='TIMEOUT')
         measurements.append(status_measurement)
 
     return measurements
@@ -70,15 +75,18 @@ def status_to_measurement(status, cluster_name):
         health = "1"
     else:
         health = "0"
+
     values.append('health='+health)
-    values.append('num_osds='+str(status['osdmap']['osdmap']['num_osds']))
-    values.append('num_up_osds='+str(status['osdmap']['osdmap']['num_up_osds']))
-    values.append('num_in_osds='+str(status['osdmap']['osdmap']['num_in_osds']))
-    values.append('num_pgs='+str(status['pgmap']['num_pgs']))
-    values.append('data_bytes='+str(status['pgmap']['data_bytes']))
-    values.append('bytes_used='+str(status['pgmap']['bytes_used']))
-    values.append('bytes_avail='+str(status['pgmap']['bytes_avail']))
-    values.append('bytes_total='+str(status['pgmap']['bytes_total']))
+
+    if status['health']['overall_status'] != 'TIMEOUT':
+        values.append('num_osds='+str(status['osdmap']['osdmap']['num_osds']))
+        values.append('num_up_osds='+str(status['osdmap']['osdmap']['num_up_osds']))
+        values.append('num_in_osds='+str(status['osdmap']['osdmap']['num_in_osds']))
+        values.append('num_pgs='+str(status['pgmap']['num_pgs']))
+        values.append('data_bytes='+str(status['pgmap']['data_bytes']))
+        values.append('bytes_used='+str(status['pgmap']['bytes_used']))
+        values.append('bytes_avail='+str(status['pgmap']['bytes_avail']))
+        values.append('bytes_total='+str(status['pgmap']['bytes_total']))
 
     return dict(name=name, tags=tags, values=values)
 
